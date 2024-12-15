@@ -17,14 +17,30 @@ final class PointerPilotUITestsLaunchTests: XCTestCase {
         continueAfterFailure = false
     }
 
-    @MainActor
     func testLaunch() throws {
         let app = XCUIApplication()
+        app.launchArguments = ["UI_TESTING"]
         app.launch()
 
-        // Insert steps here to perform after app launch but before taking a screenshot,
-        // such as logging into a test account or navigating somewhere in the app
+        print("Waiting for window to appear...")
+        let windowsQuery = app.windows
+        let startTime = Date()
+        let timeout: TimeInterval = 10
+        
+        while windowsQuery.count == 0 && Date().timeIntervalSince(startTime) < timeout {
+            print("Current window count: \(windowsQuery.count)")
+            print("Available windows: \(windowsQuery.debugDescription)")
+            RunLoop.current.run(until: Date(timeIntervalSinceNow: 1.0))
+        }
+        
+        // Verify window exists
+        XCTAssertTrue(windowsQuery.count > 0, "Window should exist after launch")
+        
+        let window = windowsQuery.firstMatch
+        print("Found window: \(window.debugDescription)")
+        XCTAssertTrue(window.exists, "Window should be accessible")
 
+        // Take a screenshot
         let attachment = XCTAttachment(screenshot: app.screenshot())
         attachment.name = "Launch Screen"
         attachment.lifetime = .keepAlways
